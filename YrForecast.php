@@ -27,6 +27,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  * @todo Add translation matrixes as public variables so that they can be se by caller
+ * @todo Maybe add a check so that we have included the yr-copyright variables, they give us the data after all - lets credit them for it.
  */
 class YrForecast
 {
@@ -171,10 +172,10 @@ class YrForecast
         $xmlString = $this->getCachedData($cacheKey);
 
         if ($xmlString) {
-            echo "CACHE: GOT CACHED";
+            echo "DEBUG, CACHE: GOT CACHED";
             $this->xmlData = simplexml_load_string($xmlString); //just assume its correct in cache
         } else {
-            echo "CACHE: GETTING FRECH";
+            echo "DEBUG, CACHE: GETTING FRECH";
             $xmlString = file_get_contents("{$this->xmlUri}/{$this->xmlFilename}", false, stream_context_create(['http' => ['method' => "GET"]]));
             $this->xmlData = simplexml_load_string($xmlString);
 
@@ -251,6 +252,9 @@ class YrForecast
     private function getCachedData($cacheKey)
     {
         if ($this->cacheMethod == 'file') {
+            if (!is_readable(__DIR__ . "/$cacheKey.cache")) {
+                return false;
+            }
             $cacheData = unserialize(file_get_contents(__DIR__ . "/$cacheKey.cache"));
             if (is_array($cacheData) && (($cacheData['timestamp'] + $this->cacheTTL) > time() )) {
                 return $cacheData['data'];
