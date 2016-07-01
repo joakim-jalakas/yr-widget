@@ -26,7 +26,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
+ * @todo Need a dynamic rain variable so we do not get "0 - 0" mm but just 0mm
+ * @todo Need to find out how wind-images work 
  * @todo Add translation matrixes as public variables so that they can be se by caller
+ * @todo Imageformat is hardcoded to SVG, maybe give user a way to choose png of size X
  * @todo Maybe add a check so that we have included the yr-copyright variables, they give us the data after all - lets credit them for it.
  */
 class YrForecast

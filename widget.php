@@ -48,7 +48,7 @@ $parser = new YrForecast('http://www.yr.no/sted/Sverige/Västra_Götaland/Bjurda
  * Set the format of each row in forecast, to get it like yr we use only H, but you 
  * could aswell do 'Y-m-d H:i' iven if it may be a bit pointless.
  */
-$parser->forecastRowdateFormat = 'Y-m-d H:i';
+$parser->forecastRowdateFormat = 'H';
 
 
 /**
@@ -102,7 +102,18 @@ sunset   {{sun.set}}<br>
   {{itemGroup.date.day}} - Name of day, like Söndag (@todo translate from swedish to noweigain)
   {{itemGroup.items}} -  all the items for this date, like they are defined in $parser->forecastItemHtmlTeplate below
  */
-$parser->forecastItemGroupHtmlTeplate = '<h1>{{itemGroup.date}} {{itemGroup.date.day}}</h1> <table border="1">{{itemGroup.items}}</table>';
+$parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}</h4>'
+        . '<table style="font-family: Arial,​Helvetica,​sans-serif; font-size:11px; width: 480px; border-top: 4px solid #48c8f5;">'
+        . '<thead style="background-color: #d5edf7;">
+                <tr>
+            <th scope="col">Tid</th>
+            <th scope="col">Varsel</th>
+            <th scope="col">
+            <th scope="col">Nedbør</th>
+            <th scope="col">Vind</th>
+            </tr>
+            </thead>
+            {{itemGroup.items}}</table>';
 
 
 /*
@@ -126,12 +137,13 @@ $parser->forecastItemGroupHtmlTeplate = '<h1>{{itemGroup.date}} {{itemGroup.date
   {{item.airpressure.unit}} - Aipressure unit.
   {{item.airpressure.value}} - You guessed it! Airpressure value
  */
-$parser->forecastItemHtmlTeplate = '<tr><td>{{item.fromDate}} till {{item.toDate}} ({{item.period.id}} {{item.period.name}})</td> '
-        . '<td><img src="{{item.image.src}}" title="{{item.image.title}}" /> </td>'
+$parser->forecastItemHtmlTeplate = 
+         '<tr><td>{{item.fromDate}} - {{item.toDate}}</td> '
+        . '<td><img src="{{item.image.src}}" width="38" height="38" alt="{{item.image.title}}" title="{{item.image.title}}" /> </td>'
         . '<td>{{item.temperature.celsius}}C </td>'
-        . '<td>{{item.precipitation.value}}, min:{{item.precipitation.min}}, max: {{item.precipitation.max}}</td>'
-        . '<td>Deg {{item.wind.direction.degrees}} code {{item.wind.direction.code}} name{{item.wind.direction.name}} mps: {{item.wind.speed.mps}} name:{{item.wind.speed.name}}</td>'
-        . '<td>{{item.airpressure.value}} {{item.airpressure.unit}}</td>'
+        . '<td>{{item.precipitation.min}} - {{item.precipitation.max}} mm</td>'
+        . '<td>{{item.wind.speed.name}}, {{item.wind.speed.mps}} m/s  fra {{item.wind.direction.name}} </td>'
+//        . '<td>{{item.airpressure.value}} {{item.airpressure.unit}}</td>'
         . '</tr>';
 
 
