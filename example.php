@@ -55,7 +55,7 @@ $parser->forecastRowdateFormat = 'Y-m-d H:i';
  * Now we begin setting up the templates that will define how we are going to print
  * the actual forecast. In order for this to be somewhat "include this file and it will 'just work'" 
  * i have used inline styles below, this is ofc not the preferred way to do it, but i makes it simpler 
- * for end-user. I also did not make it responsive, but you have the variables so just build on this. 
+ * for end-user. I also did not make it responsive or anything like that, but you have the variables so just build on this. 
  */
 
 
