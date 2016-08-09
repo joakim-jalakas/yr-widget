@@ -118,9 +118,13 @@ class YrForecast
             $toDate = new DateTime($forecastItem->attributes()['to']);
 
             $periodNameMap = [0 => 'Natt', 1 => 'Morgon', 2 => 'Dag', 3 => 'Kveld'];
-            //i have not yet managed to get the windArrows since they are named 
-            //in a special way that seems to not be documneted, cloud-image has this documentation
-            //but not wind as far as i can tell from http://om.yr.no/verdata/xml/spesifikasjon/
+
+            //but not wind as far as i can tell from 
+            //wind arrows are not documented in http://om.yr.no/verdata/xml/spesifikasjon/ so i have not been 
+            //able to find any svg version of these, will have to use PNG for now, but that gives us a fixes size.
+            //
+            //
+    
 
             $templateTags = [
                 '{{item.fromDate}}',
@@ -133,6 +137,7 @@ class YrForecast
                 '{{item.precipitation.value}}',
                 '{{item.precipitation.min}}',
                 '{{item.precipitation.max}}',
+                '{{item.wind.image.src}}',
                 '{{item.wind.direction.degrees}}',
                 '{{item.wind.direction.code}}',
                 '{{item.wind.direction.name}}',
@@ -153,6 +158,7 @@ class YrForecast
                 $forecastItem->precipitation->attributes()['value'],
                 $forecastItem->precipitation->attributes()['minvalue'],
                 $forecastItem->precipitation->attributes()['maxvalue'],
+                $this->buildWindimageUri($forecastItem->windSpeed->attributes()['name'], $forecastItem->windDirection->attributes()['deg']),
                 $forecastItem->windDirection->attributes()['deg'],
                 $forecastItem->windDirection->attributes()['code'],
                 $forecastItem->windDirection->attributes()['name'],
@@ -315,6 +321,49 @@ class YrForecast
                 . ' since i cannot write to my own directory. No cache will be used. Do not run like this in production!</div>';
             }
         }
+    }
+
+    protected function buildWindimageUri($speedName, $directionInDegree)
+    {
+        if ($speedName == 'Stille') {
+            return 'http://fil.nrk.no/yr/grafikk/vindpiler/32/vindstille.png';
+        }
+        return 'http://fil.nrk.no/yr/grafikk/vindpiler/32/vindpil.' . $this->calculateWindArrowSpeedGroup($speedName)
+                . '.' . $this->calculateWindArrowDirectionGroup($directionInDegree) . '.png';
+    }
+
+    protected function calculateWindArrowDirectionGroup($directionInDegrees)
+    {
+        $directionInDegrees = intval($directionInDegrees);
+        echo "<!-- $directionInDegrees -->";
+        $windArrowGroup = 0;
+        while ($windArrowGroup < 360) {
+            if (($directionInDegrees >= $windArrowGroup) && ($directionInDegrees <= ($windArrowGroup + 5))) {
+                return str_pad($windArrowGroup, 3, '0', STR_PAD_LEFT);
+            }
+            $windArrowGroup += 5;
+        }
+        return '000';
+    }
+
+    protected function calculateWindArrowSpeedGroup($windSpeedName)
+    {
+        $nameToImagegroupsTranslationMap = ['Flau vind' => '0000',
+            'Svak vind' => '0025',
+            'Lett bris' => '0050',
+            'Laber bris' => '0075',
+            'Frisk bris' => '0100',
+            'Liten kuling' => '0125',
+            'Stiv kuling' => '0150',
+            'Sterk kuling' => '0175',
+            'Liten storm' => '0225',
+            'Full storm' => '0250',
+            'Sterk storm' => '0300',
+            'Orkan' => '0350'];
+        if (array_key_exists("$windSpeedName", $nameToImagegroupsTranslationMap)) {
+            return $nameToImagegroupsTranslationMap["$windSpeedName"];
+        }
+        return $windSpeedName;
     }
 
 }

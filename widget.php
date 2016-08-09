@@ -4,6 +4,8 @@
  * @author Jakim Jalakas <joakim@jalakas.com>
  * @copyright (c) 2016, Joakim Jalakas
  * 
+ * @todo Language, wind-arrows
+ * 
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -142,7 +144,7 @@ $parser->forecastItemHtmlTeplate =
         . '<td><img src="{{item.image.src}}" width="38" height="38" alt="{{item.image.title}}" title="{{item.image.title}}" /> </td>'
         . '<td>{{item.temperature.celsius}}C </td>'
         . '<td>{{item.precipitation.min}} - {{item.precipitation.max}} mm</td>'
-        . '<td>{{item.wind.speed.name}}, {{item.wind.speed.mps}} m/s  fra {{item.wind.direction.name}} </td>'
+        . '<td><img src="{{item.wind.image.src}}" title="" alt="">  {{item.wind.speed.name}}, {{item.wind.speed.mps}} m/s  fra {{item.wind.direction.name}}</td>'
 //        . '<td>{{item.airpressure.value}} {{item.airpressure.unit}}</td>'
         . '</tr>';
 
