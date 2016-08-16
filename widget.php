@@ -28,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 require_once 'YrForecast.php'; //we need our class
 date_default_timezone_set('Europe/Stockholm'); //Set accordingly
 
@@ -59,8 +58,6 @@ $parser->forecastRowdateFormat = 'H';
  * i have used inline styles below, this is ofc not the preferred way to do it, but i makes it simpler 
  * for end-user. I also did not make it responsive or anything like that, but you have the variables so just build on this. 
  */
-
-
 /**
  * This is the template that is printed before we start looping any groups and rows 
  * The following variables are avaliable: 
@@ -88,8 +85,6 @@ $parser->headerTemplate = '
             alt: {{location.altitude}} <br>
             lat: {{location.latitude}} <br>
             long:{{location.longitude}} <br>
-            link: {{credit.link.text}} <br>
-            link url:{{credit.link.url}} <br>
             lastupd: {{meta.lastupdate}} <br>
             nextupd: {{meta.nextupdate}} <br>
 sunrise {{sun.rise}}<br>
@@ -118,7 +113,7 @@ $parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}</h4>'
             {{itemGroup.items}}</table>';
 
 
-/*
+/**
  * This is each single "row" in the forecast, the one that actually shows the forecast data. 
  * The following paramaters are avalable:
   {{item.fromDate}} - startdate for this item, usally we use only time, like 18
@@ -131,6 +126,7 @@ $parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}</h4>'
   {{item.precipitation.value}} - Rain yt thinks we will get
   {{item.precipitation.min}} - Rain yr think we will get, at minimum
   {{item.precipitation.max}} - Rain yr think we will get, at most
+  {{item.wind.image.src}} - The url to the wind-icon image (hardcoded to png 32px)
   {{item.wind.direction.degrees}} - Wind direction in degree
   {{item.wind.direction.code}} - Wind direction, degrees
   {{item.wind.direction.name}} - Wind direction, like SSE
@@ -139,12 +135,11 @@ $parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}</h4>'
   {{item.airpressure.unit}} - Aipressure unit.
   {{item.airpressure.value}} - You guessed it! Airpressure value
  */
-$parser->forecastItemHtmlTeplate = 
-         '<tr><td>{{item.fromDate}} - {{item.toDate}}</td> '
+$parser->forecastItemHtmlTeplate = '<tr><td>{{item.fromDate}} - {{item.toDate}}</td> '
         . '<td><img src="{{item.image.src}}" width="38" height="38" alt="{{item.image.title}}" title="{{item.image.title}}" /> </td>'
         . '<td>{{item.temperature.celsius}}C </td>'
         . '<td>{{item.precipitation.min}} - {{item.precipitation.max}} mm</td>'
-        . '<td><img src="{{item.wind.image.src}}" title="" alt="">  {{item.wind.speed.name}}, {{item.wind.speed.mps}} m/s  fra {{item.wind.direction.name}}</td>'
+        . '<td><img src="{{item.wind.image.src}}">  {{item.wind.speed.name}}, {{item.wind.speed.mps}} m/s  fra {{item.wind.direction.name}}</td>'
 //        . '<td>{{item.airpressure.value}} {{item.airpressure.unit}}</td>'
         . '</tr>';
 
@@ -153,7 +148,7 @@ $parser->forecastItemHtmlTeplate =
  * Template that wraps it all up, the last thing written. 
  * See headerTemplate for variables since this has the same set
  */
-$parser->footerTemplate = '';
+$parser->footerTemplate = '<span><a href="{{credit.link.url}}">{{credit.link.text}}</span>';
 
 
 /**

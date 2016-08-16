@@ -27,7 +27,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
  * @todo Need a dynamic rain variable so we do not get "0 - 0" mm but just 0mm
- * @todo Need to find out how wind-images work 
  * @todo Add translation matrixes as public variables so that they can be se by caller
  * @todo Imageformat is hardcoded to SVG, maybe give user a way to choose png of size X
  * @todo Maybe add a check so that we have included the yr-copyright variables, they give us the data after all - lets credit them for it.
@@ -40,7 +39,7 @@ class YrForecast
     private $xmlUri;
     private $xmlFilename = 'varsel.xml';
     private $cacheMethod = 'file';
-    private $cacheTTL = 1800;
+    private $cacheTTL = 900;
     public $forecastRowdateFormat = 'H:i';  //date used in each forecastrow
     public $dateFormat = 'Y-m-d H:i:s'; //all other dates
     public $headerTemplate;
@@ -63,10 +62,11 @@ class YrForecast
     public function printForecast()
     {
         $this->loadXmlData();
-        /* tabular->time contains _all_ forecasts in ungrouped rows, so to present it
+        /*
+          tabular->time contains _all_ forecasts in ungrouped rows, so to present it
           like we want we will have to group them. There has to be a better way than
-          below but i cant think of one right now. */
-
+          below but i cant think of one right now.
+         */
         $forecastItems = [];
         foreach ($this->xmlData->forecast->tabular->time as $forecastItem) {
             $arrayKey = substr($forecastItem->attributes()['from'], 0, 10);
@@ -116,16 +116,7 @@ class YrForecast
         foreach ($forecastItems as $forecastItem) {
             $fromDate = new DateTime($forecastItem->attributes()['from']);
             $toDate = new DateTime($forecastItem->attributes()['to']);
-
             $periodNameMap = [0 => 'Natt', 1 => 'Morgon', 2 => 'Dag', 3 => 'Kveld'];
-
-            //but not wind as far as i can tell from 
-            //wind arrows are not documented in http://om.yr.no/verdata/xml/spesifikasjon/ so i have not been 
-            //able to find any svg version of these, will have to use PNG for now, but that gives us a fixes size.
-            //
-            //
-    
-
             $templateTags = [
                 '{{item.fromDate}}',
                 '{{item.toDate}}',
@@ -156,8 +147,8 @@ class YrForecast
                 $forecastItem->symbol->attributes()['name'],
                 $forecastItem->temperature->attributes()['value'],
                 $forecastItem->precipitation->attributes()['value'],
-                $forecastItem->precipitation->attributes()['minvalue'],
-                $forecastItem->precipitation->attributes()['maxvalue'],
+                empty($forecastItem->precipitation->attributes()['minvalue']) ? '0' : $forecastItem->precipitation->attributes()['minvalue'],
+                empty($forecastItem->precipitation->attributes()['maxvalue']) ? '0' : $forecastItem->precipitation->attributes()['maxvalue'],
                 $this->buildWindimageUri($forecastItem->windSpeed->attributes()['name'], $forecastItem->windDirection->attributes()['deg']),
                 $forecastItem->windDirection->attributes()['deg'],
                 $forecastItem->windDirection->attributes()['code'],
@@ -181,10 +172,8 @@ class YrForecast
         $xmlString = $this->getCachedData($cacheKey);
 
         if ($xmlString) {
-            echo "DEBUG, CACHE: GOT CACHED";
             $this->xmlData = simplexml_load_string($xmlString); //just assume its correct in cache
         } else {
-            echo "DEBUG, CACHE: GETTING FRECH";
             $xmlString = file_get_contents("{$this->xmlUri}/{$this->xmlFilename}", false, stream_context_create(['http' => ['method' => "GET"]]));
             $this->xmlData = simplexml_load_string($xmlString);
 
@@ -307,7 +296,7 @@ class YrForecast
                     . 'http://php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen</a>');
         }
         if (!function_exists('simplexml_load_string')) {
-            die('simpleXml seem to not be available, see is not set to true, this is a must, see <a href="http://php.net/manual/en/book.simplexml.php">'
+            die('simpleXml seem to not be available, this is a must, see <a href="http://php.net/manual/en/book.simplexml.php">'
                     . 'http://php.net/manual/en/book.simplexml.php</a>');
         }
         if (function_exists('apcu_add')) {
@@ -339,7 +328,7 @@ class YrForecast
         $windArrowGroup = 0;
         while ($windArrowGroup < 360) {
             if (($directionInDegrees >= $windArrowGroup) && ($directionInDegrees <= ($windArrowGroup + 5))) {
-                return str_pad($windArrowGroup, 3, '0', STR_PAD_LEFT);
+                return str_pad(($windArrowGroup + 5), 3, '0', STR_PAD_LEFT);
             }
             $windArrowGroup += 5;
         }
