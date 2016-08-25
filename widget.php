@@ -76,20 +76,7 @@ $parser->forecastRowdateFormat = 'H';
   {{sun.rise}} - datetime of sunrise at location, format is governed by public var $parser->dateFormat
   {{sun.set}} - datetime of sunset at location, format is governed by public var $parser->dateFormat
  */
-$parser->headerTemplate = '
-            name: {{location.name}} <br>
-            type: {{location.type}} <br>
-            countr: {{location.country}} <br>
-            timezid: {{location.timezone.id}} <br>
-            offset: {{location.timezone.utcoffsetMinutes}} <br>
-            alt: {{location.altitude}} <br>
-            lat: {{location.latitude}} <br>
-            long:{{location.longitude}} <br>
-            lastupd: {{meta.lastupdate}} <br>
-            nextupd: {{meta.nextupdate}} <br>
-sunrise {{sun.rise}}<br>
-sunset   {{sun.set}}<br>
-';
+$parser->headerTemplate = '<h1>{{location.name}} ({{location.type}})</h1>';
 
 
 /**
@@ -99,13 +86,13 @@ sunset   {{sun.set}}<br>
   {{itemGroup.date.day}} - Name of day, like Söndag (@todo translate from swedish to noweigain)
   {{itemGroup.items}} -  all the items for this date, like they are defined in $parser->forecastItemHtmlTeplate below
  */
-$parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}</h4>'
+$parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}, {{itemGroup.date}}</h4>'
         . '<table style="font-family: Arial,​Helvetica,​sans-serif; font-size:11px; width: 480px; border-top: 4px solid #48c8f5;">'
         . '<thead style="background-color: #d5edf7;">
                 <tr>
             <th scope="col">Tid</th>
             <th scope="col">Varsel</th>
-            <th scope="col">
+            <th scope="col"></th>
             <th scope="col">Nedbør</th>
             <th scope="col">Vind</th>
             </tr>
