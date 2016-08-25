@@ -40,12 +40,20 @@ class YrForecast
     private $xmlFilename = 'varsel.xml';
     private $cacheMethod = 'file';
     private $cacheTTL = 900;
+    private $activeLanguage = 'sv';
     public $forecastRowdateFormat = 'H:i';  //date used in each forecastrow
     public $dateFormat = 'Y-m-d H:i:s'; //all other dates
     public $headerTemplate;
     public $footerTemplate;
     public $forecastItemGroupHtmlTeplate;
     public $forecastItemHtmlTeplate;
+    private $translations = [
+        'se' => [
+            'dayNameTranslationMatrix' => [0 => 'Söndag', 1 => 'Måndag', 2 => 'Tisdag', 3 => 'Onsdag', 4 => 'Torsdag', 5 => 'Fredag', 6 => 'Lördag'],
+            'X' => 'Y'
+        ],
+        'no' => []
+    ];
 
     /**
      * @param type $urlToYrXML
@@ -53,7 +61,8 @@ class YrForecast
     public function __construct($urlToYrXML)
     {
         $this->xmlUri = rtrim($urlToYrXML, '/');
-        $this->checkThatRequiredFunctionsExist();
+        $this->checkThatRequiredFunctionsExistOrDie();
+        $this->decideCacheMethod();
     }
 
     /**
@@ -88,7 +97,7 @@ class YrForecast
     protected function printForecastItemGroup($groupDate, $forecastItems)
     {
         $dateTimeForDay = new DateTime("$groupDate 12:00:00");
-        $dayNameTranslationMatrix = [0 => 'Söndag', 1 => 'Måndag', 2 => 'Tisdag', 3 => 'Onsdag', 4 => 'Torsdag', 5 => 'Fredag', 6 => 'Lördag'];
+        $dayNameTranslationMatrix = $this->translations[$this->activeLanguage]['dayNameTranslationMatrix'];
 
         $templateTags = [
             '{{itemGroup.date}}',
@@ -149,7 +158,7 @@ class YrForecast
                 $forecastItem->precipitation->attributes()['value'],
                 empty($forecastItem->precipitation->attributes()['minvalue']) ? '0' : $forecastItem->precipitation->attributes()['minvalue'],
                 empty($forecastItem->precipitation->attributes()['maxvalue']) ? '0' : $forecastItem->precipitation->attributes()['maxvalue'],
-                $this->buildWindimageUri($forecastItem->windSpeed->attributes()['name'], $forecastItem->windDirection->attributes()['deg']),
+                $this->buildWindimageUri($forecastItem->windSpeed->attributes()['mps'], $forecastItem->windDirection->attributes()['deg']),
                 $forecastItem->windDirection->attributes()['deg'],
                 $forecastItem->windDirection->attributes()['code'],
                 $forecastItem->windDirection->attributes()['name'],
@@ -287,9 +296,87 @@ class YrForecast
     }
 
     /**
-     * 
+     * Wind-images are built by having the windspeed-goup concatenated with a direction group
+     * This means there are a bunch of arrows at the yr-server. This function builds the name.
+     * Sadly i have not found any SVG of these so here we will just get the PNG. That sucks a bit
+     * @param type The windspeddname, like "Liten kuling" - this will have to changed to actual speed in future versions
+     * @param type The direction i degrees.
+     * @return string
      */
-    protected function checkThatRequiredFunctionsExist()
+    protected function buildWindimageUri($windSpeed, $directionInDegree)
+    {
+
+        if ((intval($windSpeed * 10)) < 4) {
+            return 'http://fil.nrk.no/yr/grafikk/vindpiler/32/vindstille.png';
+        }
+        return 'http://fil.nrk.no/yr/grafikk/vindpiler/32/vindpil.' . $this->calculateWindArrowSpeedGroup($windSpeed)
+                . '.' . $this->calculateWindArrowDirectionGroup($directionInDegree) . '.png';
+    }
+
+    /**
+     * There are not 365 wind-direction-arrows, they are grouped in incements of 5.
+     * That is impressive in itself, but we have to group them - and that is done here
+     * @param type $directionInDegrees
+     * @return string
+     */
+    protected function calculateWindArrowDirectionGroup($directionInDegrees)
+    {
+        $directionInDegrees = intval($directionInDegrees);
+        $windArrowGroup = 0;
+        while ($windArrowGroup < 360) {
+            if (($directionInDegrees >= $windArrowGroup) && ($directionInDegrees <= ($windArrowGroup + 5))) {
+                return str_pad(($windArrowGroup + 5), 3, '0', STR_PAD_LEFT);
+            }
+            $windArrowGroup += 5;
+        }
+        return '000';
+    }
+
+    /**
+     * I have not found any documentation for this so just making something that will work
+     * for now. Its not pretty.
+     * @todo I think these could be gropued by windSpeed instead, it's not that many ranges
+     * @param type $windSpeedName
+     * @return string
+     */
+    protected function calculateWindArrowSpeedGroup($windSpeed)
+    {
+        $windSpeed = intval($windSpeed * 10);
+
+        if ($windSpeed <= 15) {
+            $windSpeed = '0000';
+        } elseif ($windSpeed <= 33) {
+            $windSpeed = '0025';
+        } elseif ($windSpeed <= 54) {
+            $windSpeed = '0050';
+        } elseif ($windSpeed <= 79) {
+            $windSpeed = '0075';
+        } elseif ($windSpeed <= 107) {
+            $windSpeed = '0100';
+        } elseif ($windSpeed <= 138) {
+            $windSpeed = '0125';
+        } elseif ($windSpeed <= 171) {
+            $windSpeed = '0150';
+        } elseif ($windSpeed <= 207) {
+            $windSpeed = '0175';
+        } elseif ($windSpeed <= 244) {
+            $windSpeed = '0225';
+        } elseif ($windSpeed <= 284) {
+            $windSpeed = '0250';
+        } elseif ($windSpeed <= 326) {
+            $windSpeed = '0300';
+        } elseif ($windSpeed > 326) {
+            $windSpeed = '0350';
+        }
+        return $windSpeed;
+    }
+
+    /**
+     * We need a few functions enabled to get this running. I do not want to resort
+     * to curl and or manual XML-parsing so if we do not have allow_url_fopen and simplexml_load_string
+     * we just die.
+     */
+    protected function checkThatRequiredFunctionsExistOrDie()
     {
         if (!ini_get('allow_url_fopen')) {
             die('allow_url_fopen is not set to true, this is a must, see <a href="http://php.net/manual/en/filesystem.configuration.php#ini.allow-url-fopen">'
@@ -299,6 +386,14 @@ class YrForecast
             die('simpleXml seem to not be available, this is a must, see <a href="http://php.net/manual/en/book.simplexml.php">'
                     . 'http://php.net/manual/en/book.simplexml.php</a>');
         }
+    }
+
+    /**
+     * Decide if we are going APC, APCU or file-based cache. We should add a few other
+     * here, but i think only ones that does not requre config (ie no memcached)
+     */
+    protected function decideCacheMethod()
+    {
         if (function_exists('apcu_add')) {
             $this->cacheMethod = 'apcu';
         } elseif (function_exists('apc_add')) {
@@ -310,49 +405,6 @@ class YrForecast
                 . ' since i cannot write to my own directory. No cache will be used. Do not run like this in production!</div>';
             }
         }
-    }
-
-    protected function buildWindimageUri($speedName, $directionInDegree)
-    {
-        if ($speedName == 'Stille') {
-            return 'http://fil.nrk.no/yr/grafikk/vindpiler/32/vindstille.png';
-        }
-        return 'http://fil.nrk.no/yr/grafikk/vindpiler/32/vindpil.' . $this->calculateWindArrowSpeedGroup($speedName)
-                . '.' . $this->calculateWindArrowDirectionGroup($directionInDegree) . '.png';
-    }
-
-    protected function calculateWindArrowDirectionGroup($directionInDegrees)
-    {
-        $directionInDegrees = intval($directionInDegrees);
-        echo "<!-- $directionInDegrees -->";
-        $windArrowGroup = 0;
-        while ($windArrowGroup < 360) {
-            if (($directionInDegrees >= $windArrowGroup) && ($directionInDegrees <= ($windArrowGroup + 5))) {
-                return str_pad(($windArrowGroup + 5), 3, '0', STR_PAD_LEFT);
-            }
-            $windArrowGroup += 5;
-        }
-        return '000';
-    }
-
-    protected function calculateWindArrowSpeedGroup($windSpeedName)
-    {
-        $nameToImagegroupsTranslationMap = ['Flau vind' => '0000',
-            'Svak vind' => '0025',
-            'Lett bris' => '0050',
-            'Laber bris' => '0075',
-            'Frisk bris' => '0100',
-            'Liten kuling' => '0125',
-            'Stiv kuling' => '0150',
-            'Sterk kuling' => '0175',
-            'Liten storm' => '0225',
-            'Full storm' => '0250',
-            'Sterk storm' => '0300',
-            'Orkan' => '0350'];
-        if (array_key_exists("$windSpeedName", $nameToImagegroupsTranslationMap)) {
-            return $nameToImagegroupsTranslationMap["$windSpeedName"];
-        }
-        return $windSpeedName;
     }
 
 }
