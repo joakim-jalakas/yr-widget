@@ -26,8 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * 
- * @todo Need a dynamic rain variable so we do not get "0 - 0" mm but just 0mm
- * @todo Add translation matrixes as public variables so that they can be se by caller
+ * 
  * @todo Imageformat is hardcoded to SVG, maybe give user a way to choose png of size X
  * @todo Maybe add a check so that we have included the yr-copyright variables, they give us the data after all - lets credit them for it.
  */
@@ -47,6 +46,7 @@ class YrForecast
     public $footerTemplate;
     public $forecastItemGroupHtmlTeplate;
     public $forecastItemHtmlTeplate;
+    public $itemPrecipitationMinMaxTemplate = '({{item.precipitation.min}} - {{item.precipitation.max}} mm)';
     private $translations = [
         'sv' => [
             'dayNameTranslationMatrix' => [-1 => 'I dag', 0 => 'Söndag', 1 => 'Måndag', 2 => 'Tisdag', 3 => 'Onsdag', 4 => 'Torsdag', 5 => 'Fredag', 6 => 'Lördag'],
@@ -97,13 +97,13 @@ class YrForecast
     protected function printForecastItemGroup($groupDate, $forecastItems)
     {
         $dateTimeForDay = new DateTime("$groupDate 12:00:00");
-        
-        if ($dateTimeForDay->format('Ymd') == date('Ymd')){
+
+        if ($dateTimeForDay->format('Ymd') == date('Ymd')) {
             $dayName = $this->translations[$this->activeLanguage]['dayNameTranslationMatrix'][-1];
-        }else{
+        } else {
             $dayName = $this->translations[$this->activeLanguage]['dayNameTranslationMatrix'][$dateTimeForDay->format("w")];
         }
-        
+
         $templateTags = [
             '{{itemGroup.date}}',
             '{{itemGroup.date.day}}',
@@ -120,6 +120,7 @@ class YrForecast
 
     /**
      * This prints each indivual forecastrow (the ones with the sun-image and temp and so on)
+     * @todo Refactor perhaps, getting big
      * @param type $forecastItems
      * @return type
      */
@@ -131,7 +132,14 @@ class YrForecast
             $fromDate = new DateTime($forecastItem->attributes()['from']);
             $toDate = new DateTime($forecastItem->attributes()['to']);
             $periodNameMap = $this->translations[$this->activeLanguage]['periodNameMap'];
-            
+
+            //Parse subtemplate to return min and max for precipitation, or empty if not set.
+            $itemPrecipitationMinmaxValue = '';
+            if (!empty($forecastItem->precipitation->attributes()['maxvalue'])) {
+                $itemPrecipitationMinmaxValue = str_replace(
+                        ['{{item.precipitation.min}}', '{{item.precipitation.max}}'], [ $forecastItem->precipitation->attributes()['minvalue'], $forecastItem->precipitation->attributes()['maxvalue']], $this->itemPrecipitationMinMaxTemplate);
+            }
+
             $templateTags = [
                 '{{item.fromDate}}',
                 '{{item.toDate}}',
@@ -143,6 +151,7 @@ class YrForecast
                 '{{item.precipitation.value}}',
                 '{{item.precipitation.min}}',
                 '{{item.precipitation.max}}',
+                '{{item.precipitation.minmax}}',
                 '{{item.wind.image.src}}',
                 '{{item.wind.direction.degrees}}',
                 '{{item.wind.direction.code}}',
@@ -162,8 +171,10 @@ class YrForecast
                 $forecastItem->symbol->attributes()['name'],
                 $forecastItem->temperature->attributes()['value'],
                 $forecastItem->precipitation->attributes()['value'],
+                //These seem to be set randomly, sometimes they are there, sometimes not.
                 empty($forecastItem->precipitation->attributes()['minvalue']) ? '0' : $forecastItem->precipitation->attributes()['minvalue'],
                 empty($forecastItem->precipitation->attributes()['maxvalue']) ? '0' : $forecastItem->precipitation->attributes()['maxvalue'],
+                $itemPrecipitationMinmaxValue,
                 $this->buildWindimageUri($forecastItem->windSpeed->attributes()['mps'], $forecastItem->windDirection->attributes()['deg']),
                 $forecastItem->windDirection->attributes()['deg'],
                 $forecastItem->windDirection->attributes()['code'],

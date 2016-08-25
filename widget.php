@@ -46,6 +46,14 @@ $parser = new YrForecast('http://www.yr.no/sted/Sverige/Västra_Götaland/Bjurda
 
 
 /**
+ * For some reason {{item.precipitation.min}} and {{item.precipitation.max}} seems
+ * to be randomly not set (and that makes us get 0 - 0mm in printout ) this
+ * template is used for {{item.precipitation.minmax}} and of these values ar not set
+ * {{item.precipitation.minmax}} will return empty and not making the design to ugly
+ */
+$parser->itemPrecipitationMinMaxTemplate = '({{item.precipitation.min}} - {{item.precipitation.max}}mm)';
+
+/**
  * Set the format of each row in forecast, to get it like yr we use only H, but you 
  * could aswell do 'Y-m-d H:i' iven if it may be a bit pointless.
  */
@@ -113,6 +121,9 @@ $parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}, {{itemGroup
   {{item.precipitation.value}} - Rain yt thinks we will get
   {{item.precipitation.min}} - Rain yr think we will get, at minimum
   {{item.precipitation.max}} - Rain yr think we will get, at most
+  {{item.precipitation.minmax}} - This is a special one since item.precipitation.min/max seems to
+ * be randomly not set. This is the result of parsing $parser->itemPrecipitationMinMaxTemplate
+ * and if not set, will return empty
   {{item.wind.image.src}} - The url to the wind-icon image (hardcoded to png 32px)
   {{item.wind.direction.degrees}} - Wind direction in degree
   {{item.wind.direction.code}} - Wind direction, degrees
@@ -125,9 +136,8 @@ $parser->forecastItemGroupHtmlTeplate = '<h4>{{itemGroup.date.day}}, {{itemGroup
 $parser->forecastItemHtmlTeplate = '<tr><td>{{item.fromDate}} - {{item.toDate}}</td> '
         . '<td><img src="{{item.image.src}}" width="38" height="38" alt="{{item.image.title}}" title="{{item.image.title}}" /> </td>'
         . '<td>{{item.temperature.celsius}}C </td>'
-        . '<td>{{item.precipitation.min}} - {{item.precipitation.max}} mm</td>'
+        . '<td>{{item.precipitation.value}} mm</td>'
         . '<td><img src="{{item.wind.image.src}}">  {{item.wind.speed.name}}, {{item.wind.speed.mps}} m/s  fra {{item.wind.direction.name}}</td>'
-//        . '<td>{{item.airpressure.value}} {{item.airpressure.unit}}</td>'
         . '</tr>';
 
 
