@@ -33,7 +33,7 @@
 class YrForecast
 {
 
-    private $yrImageUri = 'http://symbol.yr.no/grafikk/sym/svg/';
+    private $yrImageUri = '/yr-widget/assets/images/symbols-svg/';
     private $xmlData;
     private $xmlUri;
     private $xmlFilename = 'varsel.xml';
@@ -421,6 +421,10 @@ class YrForecast
                 . ' since i cannot write to my own directory. No cache will be used. Do not run like this in production!</div>';
             }
         }
+    }
+
+    public function setForecastImagePath($imagePathRelativeToRoot){
+        $this->yrImageUri = $imagePathRelativeToRoot;
     }
 
 }
